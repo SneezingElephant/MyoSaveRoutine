@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SaveRoutine : MonoBehaviour
 {
@@ -34,6 +36,9 @@ public class SaveRoutine : MonoBehaviour
     // Define a save switch --> 0 = idle, 1 = start recording, 2 = start saving into CSV, 3 = saving, 4 = saved
     public int saveSwitch;
 
+    public TMP_Dropdown graspTypeDropdown; // Dropdown menu to select grasp type
+    public Text graspTypeText; // Text to display the selected grasp type
+
 
     private void Start()
     {
@@ -49,20 +54,27 @@ public class SaveRoutine : MonoBehaviour
         }
 
         // If saving is called
-        if (saveSwitch == 2)                
+        if (saveSwitch == 2) //Start saving into CSV, grasp type is "Resting"                
         {
             saveSwitch = 3;                 // Avoids it entering a saving loop and moving to step 2
 
-            // Define the filename (unique by using timestamps, which avoids accidental overwriting)
-            string shortFilename = "RawEMG-.csv";
-            filename = AppendTimeStamp(shortFilename);
+            // Define the filename based on the grasp type.
+           
+            //string shortFilename = "RawEMG-.csv"; // ===========Deprecated============
+           
+            filename = Path.Combine(Application.persistentDataPath, graspTypeDropdown.options[graspTypeDropdown.value].text + "RAW.csv");
 
             // Only the raw data is being recorded. The data will be further processed offline in MatLab
+            
+            
             rawEMGRoutine(filename);        // Uncomment if saving the raw EMG
+            
+            
             //prcEMGRoutine(filename);      // Uncomment if saving the processed or filtered EMG
 
             saveSwitch = 4;                 // Notify ClientRoutine_KIRA.cs that the file has been saved
         }
+        
     }
 
     // ============================== Save raw values to CSV ==============================
@@ -88,7 +100,7 @@ public class SaveRoutine : MonoBehaviour
         // Write raw EMG into a CSV file
         FunctionsCSV csv = new FunctionsCSV();
         csv.saveRawList(filename, raw_emg_Pod01, raw_emg_Pod02, raw_emg_Pod03, raw_emg_Pod04, raw_emg_Pod05, raw_emg_Pod06, raw_emg_Pod07, raw_emg_Pod08, raw_emg_time);
-        UnityEngine.Debug.Log("Raw EMG CSV file created!");
+        UnityEngine.Debug.Log("Raw EMG CSV file created! " + filename + " at " + Path.GetFullPath(filename));
     }
 
 
@@ -180,14 +192,18 @@ public class SaveRoutine : MonoBehaviour
         EMG08_Controller.avg_emg_Pod08.Clear();
     }
 
-    // ============================== Append timestamp to filename ==============================
-    public string AppendTimeStamp(string fileName)
+    // ============================== Append timestamp to filename (Deprecated) ==============================
+    /*public string AppendTimeStampAndGraspType(string fileName)
     {
         return string.Concat(
             Path.GetFileNameWithoutExtension(fileName),
+            graspTypeDropdown.options[graspTypeDropdown.value].text,
             DateTime.Now.ToString("yyyy-MM-dd-HH.mm.ss"),
             Path.GetExtension(fileName)
+
             );
-    }
+    } */
+
+
 
 }

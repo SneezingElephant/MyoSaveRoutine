@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System;
 using System.Linq;
+using System.Globalization;
 
 public class FunctionsCSV : MonoBehaviour {
 
@@ -108,102 +109,35 @@ public class FunctionsCSV : MonoBehaviour {
 
 
     // ==================================== Save raw EMG to CSV file (list) ====================================
-    public void saveRawList(string filename, List<int> dat_01, List<int> dat_02, List<int> dat_03, List<int> dat_04, List<int> dat_05, List<int> dat_06, List<int> dat_07, List<int> dat_08, List<DateTime> dat_time)
+    public void saveRawList(string path, 
+        List<int> pod1, List<int> pod2, List<int> pod3, List<int> pod4, 
+        List<int> pod5, List<int> pod6, List<int> pod7, List<int> pod8, 
+        List<DateTime> times)
     {
-        // Identify the array with the least elements
-        int[] compareLen = { dat_01.Count, dat_02.Count, dat_03.Count, dat_04.Count, dat_05.Count, dat_06.Count, dat_07.Count, dat_08.Count };
-        int len = compareLen.Min();
+        // Check if the file already exists
+        bool fileExists = File.Exists(path);
 
-        // Trim to size
-        dat_01 = TrimToSizeInt(dat_01, len);
-        dat_02 = TrimToSizeInt(dat_02, len);
-        dat_03 = TrimToSizeInt(dat_03, len);
-        dat_04 = TrimToSizeInt(dat_04, len);
-        dat_05 = TrimToSizeInt(dat_05, len);
-        dat_06 = TrimToSizeInt(dat_06, len);
-        dat_07 = TrimToSizeInt(dat_07, len);
-        dat_08 = TrimToSizeInt(dat_08, len);
-
-
-        // Define Jagged array
-        int[][] jagged_dat = new int[8][]
+        using (var sw = new StreamWriter(path, append: true))
         {
-            dat_01.ToArray(),
-            dat_02.ToArray(),
-            dat_03.ToArray(),
-            dat_04.ToArray(),
-            dat_05.ToArray(),
-            dat_06.ToArray(),
-            dat_07.ToArray(),
-            dat_08.ToArray()
-        };
-
-        // Do the same for the timestamp array
-        DateTime[] newTime_dat = new DateTime[len];
-
-        if (dat_time.Count != len)
-        {
-            // Return new array with correct length
-            int counter = 0;
-            for (int idx = dat_time.Count - len - 1; idx < len; idx++)
+            // Write the header row if the file is being created for the first time
+            if (!fileExists)
             {
-                newTime_dat[counter] = dat_time[idx];
-                counter = counter + 1;
+                sw.WriteLine("Timestamp,Pod1,Pod2,Pod3,Pod4,Pod5,Pod6,Pod7,Pod8");
             }
 
-        }
+            // Determine the number of rows to write
+            int n = pod1.Count;
 
-        else
-        {
-            newTime_dat = dat_time.ToArray();
-            UnityEngine.Debug.Log("Length of the EMG arrays and timestamp arrays are the same");
-        }
-
-        // Prepare data to be converted to string
-        string[] rowDataTemp = new string[9];
-
-        for (int i = 0; i < len; i++)
-        {
-            for (int j = 0; j < 8; j++)
+            // Write each row of data
+            for (int i = 0; i < n; i++)
             {
-                rowDataTemp[j] = jagged_dat[j][i].ToString();
+                // Format the timestamp with millisecond precision
+                string ts = times[i].ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
+
+                // Write the data row
+                sw.WriteLine($"{ts},{pod1[i]},{pod2[i]},{pod3[i]},{pod4[i]},{pod5[i]},{pod6[i]},{pod7[i]},{pod8[i]}");
             }
-            rowDataTemp[8] = newTime_dat[i].ToString("yyyy-MM-dd HH:mm:ss.fff");
-
-            string newLine = rowDataTemp[0] + "," + rowDataTemp[1] + "," +
-            rowDataTemp[2] + "," + rowDataTemp[3] + "," + rowDataTemp[4] + "," +
-            rowDataTemp[5] + "," + rowDataTemp[6] + "," + rowDataTemp[7] + "," + rowDataTemp[8] +
-            Environment.NewLine;
-
-            string filePath = getPath(filename);
-
-            // If the file doesn't exist, create it and add header
-            if (!File.Exists(filePath))
-            {
-                // Creating First row of titles 
-                string[] rowHeader = new string[9];
-
-                rowHeader[0] = "Raw EMG - Pod01";
-                rowHeader[1] = "Raw EMG - Pod02";
-                rowHeader[2] = "Raw EMG - Pod03";
-                rowHeader[3] = "Raw EMG - Pod04";
-                rowHeader[4] = "Raw EMG - Pod05";
-                rowHeader[5] = "Raw EMG - Pod06";
-                rowHeader[6] = "Raw EMG - Pod07";
-                rowHeader[7] = "Raw EMG - Pod08";
-                rowHeader[8] = "Timestamp";
-
-                string newHeader = rowHeader[0] + "," + rowHeader[1] + "," +
-                    rowHeader[2] + "," + rowHeader[3] + "," + rowHeader[4] + "," +
-                    rowHeader[5] + "," + rowHeader[6] + "," + rowHeader[7] + "," + rowHeader[8] +
-                    Environment.NewLine;
-
-                File.WriteAllText(filePath, newHeader);
-            }
-
-            File.AppendAllText(filePath, newLine);
         }
-
     }
 
 

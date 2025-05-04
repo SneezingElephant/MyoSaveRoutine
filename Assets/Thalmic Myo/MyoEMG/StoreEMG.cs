@@ -21,28 +21,35 @@ public class StoreEMG : MonoBehaviour
         storeData(ThalmicMyo.emg);
     }
 
-    public void storeData(int[] emg) {
-
-        // EMG pod 08 issue
-        // The EMG Pod 08 is unreadable during the first loop iteration. i.e. In the first loop the emg[] size is 7, not 8
-        if (counter > 2)
+    public void storeData(int[] emg)
+    {
+        // Ensure the EMG array has at least 8 elements before accessing it
+        if (emg != null && emg.Length >= 8)
         {
-            // Store data in lists
-            storeEMG01.Add(emg[0]);   // Get current EMG
-            storeEMG02.Add(emg[1]);
-            storeEMG03.Add(emg[2]);
-            storeEMG04.Add(emg[3]);
-            storeEMG05.Add(emg[4]);
-            storeEMG06.Add(emg[5]);
-            storeEMG07.Add(emg[6]);
-            storeEMG08.Add(emg[7]);
-            //storeEMG08.Add(0);
+            if (counter > 2)
+            {
+                // Store data in lists
+                storeEMG01.Add(emg[0]);   // Get current EMG
+                storeEMG02.Add(emg[1]);
+                storeEMG03.Add(emg[2]);
+                storeEMG04.Add(emg[3]);
+                storeEMG05.Add(emg[4]);
+                storeEMG06.Add(emg[5]);
+                storeEMG07.Add(emg[6]);
+                storeEMG08.Add(emg[7]);
 
-            timestamp.Add(DateTime.Now);   // Get current local time and date
+                timestamp.Add(DateTime.Now);   // Get current local time and date
 
-            counter = counter + 1;
+                counter++;
+            }
+            else
+            {
+                counter++;
+            }
         }
-
-        else { counter = counter + 1; }
+        else
+        {
+            Debug.LogWarning("EMG data is incomplete or null. Skipping this iteration.");
+        }
     }
 }
